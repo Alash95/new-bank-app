@@ -1,6 +1,8 @@
 package com.alash.bankapp.service.impl;
 
 import com.alash.bankapp.dto.*;
+import com.alash.bankapp.email.dto.EmailDetails;
+import com.alash.bankapp.email.service.EmailService;
 import com.alash.bankapp.entity.User;
 import com.alash.bankapp.repository.UserRepository;
 import com.alash.bankapp.service.TransactionService;
@@ -16,10 +18,12 @@ public class UserServiceImpl implements UserService {
 
     private UserRepository userRepository;
     private TransactionService transactionService;
+    private EmailService emailService;
 
-    public UserServiceImpl(UserRepository userRepository, TransactionService transactionService) {
+    public UserServiceImpl(UserRepository userRepository, TransactionService transactionService, EmailService emailService) {
         this.userRepository = userRepository;
         this.transactionService = transactionService;
+        this.emailService = emailService;
     }
 
     @Override
@@ -55,6 +59,17 @@ public class UserServiceImpl implements UserService {
 
 
         User savedUser = userRepository.save(user);
+
+        String accountDetails = savedUser.getFirstName() + " " + savedUser.getLastName() + " "
+                + savedUser.getOtherName() + "\nAccount Number: " + savedUser.getAccountNumber();
+        //send email alert
+        EmailDetails message = EmailDetails.builder()
+                .recipient(savedUser.getEmail())
+                .subject("ACCOUNT DETAILS")
+                .messageBody("Congratulations!, your account has been successfully created! Kindly find your details below: \n" + accountDetails)
+                .build();
+
+        emailService.sendSimpleEmail(message);
 
         return Response.builder()
                 .responseCode(ResponseUtils.SUCCESS)
