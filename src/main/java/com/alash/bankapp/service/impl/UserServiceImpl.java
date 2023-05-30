@@ -10,6 +10,7 @@ import com.alash.bankapp.service.UserService;
 import com.alash.bankapp.utils.ResponseUtils;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -203,6 +204,22 @@ public class UserServiceImpl implements UserService {
 
         transactionService.saveTransaction(transactionDto);
 
+        String accountDetails = receivingUser.getFirstName()+ " "+ receivingUser.getLastName()+ " " + receivingUser.getOtherName()+
+                "\nAccount Number: " + receivingUser.getAccountNumber();
+        //Email alert
+        EmailDetails message = EmailDetails.builder()
+                .recipient(receivingUser.getEmail())
+                .subject("DVB(Dollar Virtual Bank) CREDIT Transaction Notification")
+                .messageBody("This is to notify you that a transaction has occurred on your account with DVB with " +
+                        "details below: \n" +
+                        "Account Name: " + accountDetails+"\n"
+                        +"Transaction Type: "+ transactionDto.getTransactionType()+"\n"
+                        +"Transaction Amount: "+ transactionRequest.getAmount()+"\n"
+                        +"Transaction currency: "+ "NGN"+"\n"
+                        +"Transaction Balance: "+ receivingUser.getAccountBalance())
+                .build();
+        emailService.sendSimpleEmail(message);
+
         return Response.builder()
                 .responseCode(ResponseUtils.SUCCESSFUL_TRANSACTION)
                 .responseMessage(ResponseUtils.ACCOUNT_CREDITED)
@@ -238,6 +255,21 @@ public class UserServiceImpl implements UserService {
 
             transactionService.saveTransaction(transactionDto);
 
+            String accountDetails = debitedUser.getLastName()+" "+ debitedUser.getFirstName()+" "+debitedUser.getOtherName()+
+                    "Account Number: "+debitedUser.getAccountNumber();
+
+            EmailDetails message = EmailDetails.builder()
+                    .recipient(debitedUser.getEmail())
+                    .subject("DVB(Dollar Virtual Bank) DEBIT Transaction Notification")
+                    .messageBody("This is to notify you that a transaction has occurred on your account with DVB with details below: \n"
+                            +"Account Name: "+ accountDetails+"\n"
+                            + "Transaction Type: "+ transactionDto.getTransactionType()+"\n"
+                            + "Transaction Amount: "+ transactionRequest.getAmount()+"\n"
+                            + "Transaction Currency: "+ "NGN"+"\n"
+                            + "Available Balance: "+ debitedUser.getAccountBalance())
+                    .build();
+            emailService.sendSimpleEmail(message);
+
 
             return Response.builder()
                     .responseCode(ResponseUtils.SUCCESSFUL_TRANSACTION)
@@ -268,7 +300,7 @@ public class UserServiceImpl implements UserService {
         User destinationAccount = userRepository.findByAccountNumber(transferRequest.getReceivingAccountNumber());
 
         if (!userRepository.existsByAccountNumber(transferRequest.getSendingAccountNumber()) ||
-                !userRepository.existsByAccountNumber(transferRequest.getReceivingAccountNumber())) {
+                 !userRepository.existsByAccountNumber(transferRequest.getReceivingAccountNumber())) {
 
             return Response.builder()
                     .responseCode(ResponseUtils.USER_NOT_FOUND_CODE)
@@ -287,6 +319,22 @@ public class UserServiceImpl implements UserService {
 
             transactionService.saveTransaction(transactionDto);
 
+            String accountDetails = sourceAccount.getLastName()+" "+ sourceAccount.getFirstName()+" "+sourceAccount.getOtherName()+
+                    "Account Number: "+sourceAccount.getAccountNumber();
+
+            EmailDetails message = EmailDetails.builder()
+                    .recipient(sourceAccount.getEmail())
+                    .subject("DVB(Dollar Virtual Bank) DEBIT Transaction Notification")
+                    .messageBody("This is to notify you that a transaction has occurred on your account with DVB with details below: \n"
+                            +"Account Name: "+ accountDetails+"\n"
+                            + "Transaction Type: "+ transactionDto.getTransactionType()+"\n"
+                            + "Transaction Amount: "+ transferRequest.getAmount()+"\n"
+                            + "Transaction Currency: "+ "NGN"+"\n"
+                            + "Available Balance: "+ sourceAccount.getAccountBalance())
+                    .build();
+            emailService.sendSimpleEmail(message);
+
+
             destinationAccount.setAccountBalance(destinationAccount.getAccountBalance().add(transferRequest.getAmount()));
             userRepository.save(destinationAccount);
 
@@ -297,6 +345,24 @@ public class UserServiceImpl implements UserService {
 
             transactionService.saveTransaction(transactionDto1);
 
+            String accountDetails1 = destinationAccount.getFirstName()+ " "+ destinationAccount.getLastName()+ " "
+                    + destinationAccount.getOtherName()+
+                    "\nAccount Number: " + destinationAccount.getAccountNumber();
+            //Email alert
+            EmailDetails message1 = EmailDetails.builder()
+                    .recipient(destinationAccount.getEmail())
+                    .subject("DVB(Dollar Virtual Bank) CREDIT Transaction Notification")
+                    .messageBody("This is to notify you that a transaction has occurred on your account with DVB with " +
+                            "details below: \n" +
+                            "Account Name: " + accountDetails1+"\n"
+                            +"Transaction Type: "+ transactionDto.getTransactionType()+"\n"
+                            +"Transaction Amount: "+ transferRequest.getAmount()+"\n"
+                            +"Transaction currency: "+ "NGN"+"\n"
+                            +"Transaction Balance: "+ destinationAccount.getAccountBalance())
+                    .build();
+            emailService.sendSimpleEmail(message1);
+
+
             return Response.builder()
                     .responseCode(ResponseUtils.SUCCESSFUL_TRANSACTION)
                     .responseMessage(ResponseUtils.TRANSFER_SUCCESSFUL_MESSAGE)
@@ -304,7 +370,7 @@ public class UserServiceImpl implements UserService {
                             .accountNumber(transferRequest.getSendingAccountNumber())
                             .accountName(sourceAccount.getFirstName() + " " + sourceAccount.getLastName() + " " + sourceAccount.getOtherName())
                             .accountBalance(sourceAccount.getAccountBalance())
-                            .accountNumber(transferRequest.getReceivingAccountNumber())
+                              .accountNumber(transferRequest.getReceivingAccountNumber())
                             .accountName(destinationAccount.getFirstName() + " " + destinationAccount.getLastName() + " " + destinationAccount.getOtherName())
                             .accountBalance(destinationAccount.getAccountBalance())
                             .build())

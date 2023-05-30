@@ -4,13 +4,44 @@ import com.alash.bankapp.dto.*;
 import com.alash.bankapp.entity.User;
 import com.alash.bankapp.service.TransactionService;
 import com.alash.bankapp.service.UserService;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
+@OpenAPIDefinition(
+        info = @Info(
+                title = "Spring boot banking application",
+                description = "Spring boot Banking Application REST APIs Implementation",
+                version = "v1.0",
+                contact = @Contact(
+                        name = "Oyin",
+                        email = "oyinlolaalasho@gmail.com",
+                        url = "https://github.com/Alash95"
+                ),
+                license = @License(
+                        name = "Apache 2.0",
+                        url = "https://github.com/Alash95"
+                )
+        ),
+        externalDocs = @ExternalDocumentation(
+                description = "Spring boot banking implementation",
+                url = "https://github.com/Alash95"
+        )
+)
+@Tag(
+        name = "User account service REST APIs/Endpoint",
+        description = "Endpoints for manipulating user Account"
+)
 public class UserController {
+
 
     private final UserService userService;
     private final TransactionService transactionService;
