@@ -7,6 +7,8 @@ import com.alash.bankapp.entity.User;
 import com.alash.bankapp.repository.UserRepository;
 import com.alash.bankapp.service.TransactionService;
 import com.alash.bankapp.service.UserService;
+import com.alash.bankapp.sms.dto.SmsRequest;
+import com.alash.bankapp.sms.service.SmsService;
 import com.alash.bankapp.utils.ResponseUtils;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +22,14 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private TransactionService transactionService;
     private EmailService emailService;
+    private SmsService smsService;
 
-    public UserServiceImpl(UserRepository userRepository, TransactionService transactionService, EmailService emailService) {
+    public UserServiceImpl(UserRepository userRepository, TransactionService transactionService,
+                           EmailService emailService, SmsService smsService) {
         this.userRepository = userRepository;
         this.transactionService = transactionService;
         this.emailService = emailService;
+        this.smsService = smsService;
     }
 
     @Override
@@ -71,6 +76,15 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         emailService.sendSimpleEmail(message);
+
+        SmsRequest smsRequest = SmsRequest.builder()
+                .destinationSmsNumber(savedUser.getPhoneNumber())
+                .smsMessage("ACCOUNT DETAILS\nCongratulations!, your account has been successfully created! Kindly find your details below: \n" + accountDetails)
+                .build();
+
+        smsService.sendSMS(smsRequest);
+
+
 
         return Response.builder()
                 .responseCode(ResponseUtils.SUCCESS)
@@ -181,9 +195,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response credit(TransactionRequest transactionRequest) {
-        /**
-         * add amount to current accountbalance
-         */
         User receivingUser = userRepository.findByAccountNumber(transactionRequest.getAccountNumber());
 
         if (!userRepository.existsByAccountNumber(transactionRequest.getAccountNumber())) {
@@ -219,6 +230,23 @@ public class UserServiceImpl implements UserService {
                         +"Transaction Balance: "+ receivingUser.getAccountBalance())
                 .build();
         emailService.sendSimpleEmail(message);
+
+        SmsRequest smsRequest = SmsRequest.builder()
+                .destinationSmsNumber(receivingUser.getPhoneNumber())
+                .smsMessage("DVB(Dollar Virtual Bank) CREDIT Transaction Notification\n"+
+                        "This is to notify you that a transaction has occurred on your account with DVB with " +
+                        "details below: \n" +
+                        "Account Name: " + accountDetails+"\n"
+                        +"Transaction Type: "+ transactionDto.getTransactionType()+"\n"
+                        +"Transaction Amount: "+ transactionRequest.getAmount()+"\n"
+                        +"Transaction currency: "+ "NGN"+"\n"
+                        +"Transaction Balance: "+ receivingUser.getAccountBalance())
+                .build();
+
+        smsService.sendSMS(smsRequest);
+
+
+
 
         return Response.builder()
                 .responseCode(ResponseUtils.SUCCESSFUL_TRANSACTION)
@@ -269,6 +297,21 @@ public class UserServiceImpl implements UserService {
                             + "Available Balance: "+ debitedUser.getAccountBalance())
                     .build();
             emailService.sendSimpleEmail(message);
+
+            SmsRequest smsRequest = SmsRequest.builder()
+                    .destinationSmsNumber(debitedUser.getPhoneNumber())
+                    .smsMessage("DVB(Dollar Virtual Bank) CREDIT Transaction Notification\n"+
+                            "This is to notify you that a transaction has occurred on your account with DVB with " +
+                            "details below: \n" +
+                            "Account Name: " + accountDetails+"\n"
+                            +"Transaction Type: "+ transactionDto.getTransactionType()+"\n"
+                            +"Transaction Amount: "+ transactionRequest.getAmount()+"\n"
+                            +"Transaction currency: "+ "NGN"+"\n"
+                            +"Transaction Balance: "+ debitedUser.getAccountBalance())
+                    .build();
+
+            smsService.sendSMS(smsRequest);
+
 
 
             return Response.builder()
@@ -334,6 +377,21 @@ public class UserServiceImpl implements UserService {
                     .build();
             emailService.sendSimpleEmail(message);
 
+            SmsRequest smsRequest = SmsRequest.builder()
+                    .destinationSmsNumber(sourceAccount.getPhoneNumber())
+                    .smsMessage("DVB(Dollar Virtual Bank) CREDIT Transaction Notification\n"+
+                            "This is to notify you that a transaction has occurred on your account with DVB with " +
+                            "details below: \n" +
+                            "Account Name: " + accountDetails+"\n"
+                            +"Transaction Type: "+ transactionDto.getTransactionType()+"\n"
+                            +"Transaction Amount: "+ transferRequest.getAmount()+"\n"
+                            +"Transaction currency: "+ "NGN"+"\n"
+                            +"Transaction Balance: "+ sourceAccount.getAccountBalance())
+                    .build();
+
+            smsService.sendSMS(smsRequest);
+
+
 
             destinationAccount.setAccountBalance(destinationAccount.getAccountBalance().add(transferRequest.getAmount()));
             userRepository.save(destinationAccount);
@@ -361,6 +419,21 @@ public class UserServiceImpl implements UserService {
                             +"Transaction Balance: "+ destinationAccount.getAccountBalance())
                     .build();
             emailService.sendSimpleEmail(message1);
+
+            SmsRequest smsRequest1 = SmsRequest.builder()
+                    .destinationSmsNumber(destinationAccount.getPhoneNumber())
+                    .smsMessage("DVB(Dollar Virtual Bank) CREDIT Transaction Notification\n"+
+                            "This is to notify you that a transaction has occurred on your account with DVB with " +
+                            "details below: \n" +
+                            "Account Name: " + accountDetails+"\n"
+                            +"Transaction Type: "+ transactionDto.getTransactionType()+"\n"
+                            +"Transaction Amount: "+ transferRequest.getAmount()+"\n"
+                            +"Transaction currency: "+ "NGN"+"\n"
+                            +"Transaction Balance: "+ destinationAccount.getAccountBalance())
+                    .build();
+
+            smsService.sendSMS(smsRequest1);
+
 
 
             return Response.builder()
